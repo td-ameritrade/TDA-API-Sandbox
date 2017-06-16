@@ -1,0 +1,13 @@
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.exe
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.pdb
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\bin\Release\AMTD_Test_API.exe
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\bin\Release\AMTD_Test_API.pdb
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\bin\Release\NZipLib.dll
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\bin\Release\ZedGraph.dll
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\bin\Release\Interop.MSXML2.dll
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\ResolveAssemblyReference.cache
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\Interop.MSXML2.dll
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.csproj.ResolveComReference.cache
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.Form1.resources
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.Properties.Resources.resources
+C:\AppDev\AMTD_Test_API\AMTD_Test_API\obj\Release\AMTD_Test_API.csproj.GenerateResource.Cache

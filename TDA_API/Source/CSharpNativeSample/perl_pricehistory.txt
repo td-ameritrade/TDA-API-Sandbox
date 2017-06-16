@@ -1,0 +1,91 @@
+#! /usr/bin/perl
+#
+# TD Ameritrade API
+# Price History example
+# No error handling
+# Sylvain Thibault Oct 2009
+#
+
+use strict;
+use warnings;
+use LWP::UserAgent;
+use Math::BigInt;
+
+### Data, fill $source $userid and $pass with your values
+my $source = '';
+my $userid = '';
+my $pass   = '';
+###
+
+### Must have space and comma
+my $symbols = 'MS, GS, AAPL, HTE';
+
+my $browser = LWP::UserAgent->new();
+
+$browser->cookie_jar({});
+
+### Login to get cookies
+my $url = 'https://apis.tdameritrade.com/apps/100/LogIn?source='.$source.'&version=1.0';
+
+my $response = $browser->post("$url",
+			      [
+			       'userid'   => $userid,
+			       'password' => $pass,
+			       'source'   => $source,
+			       'version'  => "1.0",
+			      ],
+			      'Content-Type' => "application/x-www-form-urlencoded",
+			     );
+
+
+### Get price history, this example is 5 days, 15 minute bars
+$url = 'https://apis.tdameritrade.com/apps/100/'.
+       'PriceHistory?source='.$source.
+       '&requestidentifiertype=SYMBOL'.
+       '&requestvalue='.$symbols.','.
+       '&intervaltype=MINUTE'.
+       '&intervalduration=15'.
+       '&periodtype=DAY'.
+       '&period=5';
+
+### Query TDA server
+$response = $browser->get($url);
+my $buf = $response->content;
+my $pos = 0;
+
+### Parse data
+my $symbol_number = unpack 'N', $buf;
+$pos += 4;
+
+### For each symbol
+for (1..$symbol_number) {
+    my ($s,$c,$nb,$data) = unpack("x$pos n/A c N A*", $buf);
+    print "<======$s======>\n";
+
+    ### Skip to price data
+    $pos = $pos + length($s) + 7;
+
+    ### for each bar
+    for my $i (0..$nb-1) {
+        ### 28 bytes of data
+	my $off = $i*28;
+
+        ### Read 1 bar data
+        ### Close high low open volume timestamp
+        ### This is for PC little Endian
+	my ($cl,$h,$l,$o,$v,$t) = unpack("x$off f> f> f> f> f> H16", $data);
+	($cl,$h,$l,$o) = map {sprintf '%.2f', $_} ($cl,$h,$l,$o);
+	print "$o|$h|$l|$cl|";
+
+	$v*=100;
+	$v = int($v + .5);
+	print "$v|";
+        ### Timestamp is 64 bit
+	$t = Math::BigInt->from_hex('0x'.$t);
+	$t/=1000;
+	print scalar localtime($t), "|\n";
+	$pos+=28;
+    }
+    ### 0xFF 0xFF
+    $pos+=2;
+}

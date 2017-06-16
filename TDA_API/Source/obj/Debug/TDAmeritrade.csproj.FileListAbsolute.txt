@@ -1,0 +1,11 @@
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\bin\Debug\TDAmeritrade.dll
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\bin\Debug\TDAmeritrade.pdb
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\bin\Debug\TechTrader.dll
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\ResolveAssemblyReference.cache
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\TDAmeritrade.dll
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\TDAmeritrade.pdb
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\bin\Debug\TDAmeritrade.dll.config
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\TechTrader.TDA.Login.resources
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\TechTrader.Technicals.Properties.Resources.resources
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\GenerateResource.read.1.tlog
+E:\PFTQ\CSharp\TechTrader\TechTrader\Plugins\Sources\TDAmeritrade\obj\Debug\GenerateResource.write.1.tlog
