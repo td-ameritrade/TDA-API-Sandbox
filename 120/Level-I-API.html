@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>TDAmeritrade API - Tester</title>
+<style>
+body,p,table,form,div { margin: 0px; padding: 0px; }
+body,p,table,input,select,textarea { font-family: Verdana; font-size: 12px; }
+input,textarea { vertical-align: middle; }
+input[type=text],select,textarea { text-align: left; }
+a		{ color: #333399; text-decoration: none; }
+a:hover	{ color: #FF9900; }
+.brdr	{ border: solid 1px #999999; }
+.btn 	{ padding: 2px 6px 4px 6px; cursor: pointer; font-weight: bold; color: #008000; background: #F0F0AA;
+		border: 1px solid; border-color: #669966 #336633 #336633 #669966;
+		filter:progid:DXImageTransform.Microsoft.Gradient (GradientType=0,StartColorStr="#FFffffff",EndColorStr="#99e8e888"); }
+.cG		{ color: #008000; }
+.cR		{ color: #CC0000; }
+.sz16	{ font-size: 16px; }
+</style>
+</head>
+
+<body bgcolor="#F6FAFF" style="margin: 20px 0px;text-align: center">
+	<b class="sz16" style="color: #000080">Level-I Stock Data</b>
+	<br><br><br>
+	<span class="sz16">1)</span> <b class=cG>SourceID:</b> <input id="SourceID" name="SourceID" type="text" size="10">
+	<b class=cG>Username:</b> <input id="Username" name="Username" type="text" size="20">
+	<b class=cG>Password:</b> <input id="Password" name="Password" type="text" size="20">
+	<input class="btn" type="button" value="Login" onclick="getData('login');">
+	<br><br>
+	<form name="datfrm" action="#" method="post" onsubmit="">
+		<span class="sz16">2)</span> <b class=cG>Symbols:</b> <textarea id="symb" rows="10" cols="100"></textarea>
+		<input class="btn" type="button" value="Snapshot Quote" onclick="clr('results');doLevelI();">
+	</form>
+	<br><br>
+	<span class="sz16">3)</span> <input class="btn" type="button" value="Logout" onclick="getData('logout');">
+	or <input class="btn" type="button" value="StreamInfo Request" onclick="getData('stream');">
+	or <input class="btn" type="button" value="KeepAlive" onclick="getData('keepalive');">
+	<br><br><br>
+<hr width="70%">
+<br><br>
+	<b class=cG>Toggle:</b>&emsp;<a href="#" onclick="off('csv');off('tracking');on('results');return false;">Results</a>
+	&bull; <a href="#" onclick="off('results');off('tracking');on('csv');return false;">CSV Data</a>
+	&bull; <a href="#" onclick="off('results');off('csv');on('tracking');return false;">Tracking</a>
+<br><br>
+<div id="results"><b class=cG>— Results Area Ready —</b></div>
+<br><br>
+<div id="csv" class="brdr" style="background: #FFFFFF; width: 200px; height: 100px; margin: 0px auto; text-align: left; overflow: auto">
+"Symbol","Price","Exchange"<br></div>
+<br><br>
+<div id="tracking" class="brdr" style="background: #FFFFFF; width: 700px; height: 500px; margin: 0px auto; text-align: left; overflow: auto">
+Raw XML will print here...<br></div>
+<p style="height: 50px">&nbsp;</p>
+<script language="JavaScript" type="text/javascript">
+<!--
+function on(id){ document.getElementById(id).style.display='block'; }
+function off(id){ document.getElementById(id).style.display='none'; }
+function clr(id){ document.getElementById(id).innerHTML=''; }
+function add(id,html){ document.getElementById(id).innerHTML=document.getElementById(id).innerHTML+html; }
+function inn(id,html){ document.getElementById(id).innerHTML=html; }
+function valIs(id){ return document.getElementById(id).value; }
+userData=document.getElementById('symb');
+function doLevelI(){
+	if(userData.value==''){ alert('Need Symbols seperated by Commas'); return false;
+	}else{
+		userData.value=userData.value.toUpperCase().replace(/ /g,'').replace(/-/g,',');
+		if(!/^[A-Z,.]+$/.test(userData.value)){ alert('Symbols must be Letters.\nSymbols must be seperated by Commas.'); return false; }
+		nextSymbGroup();
+	}
+}
+function nextSymbGroup(){
+	userData.value=userData.value.replace(/,,/g,',');
+	symbArr=userData.value.split(',');
+	symbArr=symbArr.slice(0,50); // 50 symbols at a time, or whatever
+	symbols=symbArr.join();
+	getData(symbols);
+}
+function getData(task){
+	Source=valIs('SourceID'); User=valIs('Username'); Pass=valIs('Password');
+	if(Source=='' || User=='' || Pass==''){ alert('Need User Info'); return false; }
+	url='https://apis.tdameritrade.com/apps/'; src='source='+Source;
+	Ajax=new XMLHttpRequest();
+	if(task=='login'){
+		data=src+'&version=1.0';
+		url+='100/LogIn?'+data;
+		data+='&userid='+User+'&password='+Pass;
+		add('tracking','URL: '+url+'<br>Data: '+data+'<br><br>');
+		Ajax.open('POST', url, true);
+		Ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		Ajax.send(data);
+	}else{
+		if(task=='keepalive'){ url+='KeepAlive?'+src;
+		}else if(task=='stream'){ url+='100/StreamerInfo?'+src;
+		}else if(task=='logout'){ url+='100/LogOut?'+src;
+		}else{ url+='100/Quote?'+src+'&symbol='+task; }
+		add('tracking','URL: '+url+'<br><br>');
+		Ajax.open('GET', url, true);
+		Ajax.setRequestHeader("Content-type", "text/html; charset=Windows-1256");
+		Ajax.setRequestHeader('If-Modified-Since', 'Fri, 31 Dec 1999 00:00:00 GMT');
+		Ajax.send(null);
+	}
+	Ajax.onreadystatechange = function(){
+		if(Ajax.readyState==4){
+			if(Ajax.status==200){
+				rT=Ajax.responseText;
+				rT=rT.replace(new RegExp('\\t|\\r|\\n','g'),'');
+				add('tracking',rT.replace(/</g,'&lt;')+'<br><br>');
+				addIt=false;
+				if(task=='stream'){
+					rT='<div style="width: 500px; text-align: left; margin: 0px auto">'+streamerURL(rT)+'</div>';
+				}else if(!rT.match('<result>OK</result>') || task=='logout'){
+					rT=rT.replace(/</g,'&lt;');
+				}else if(task=='login'){
+					rT='Logged-In';
+				}else{
+					rT=writeTable(rT); addIt=true;
+					userData.value=userData.value.replace(task,'');
+					if(userData.value!='') nextSymbGroup();
+				}
+				if(addIt){ add('results',rT); }else{ inn('results',rT); }
+			}else{
+				alert('Error: status = '+Ajax.status);
+				return false;
+			}
+		}
+	};
+}
+function streamerURL(xml){
+	x=xml.replace(/></g,'>0<').replace(/<\//g,'<');
+	url=x.split('<streamer-url>')[1]; token=x.split('<token>')[1]; cdDom=x.split('<cd-domain-id>')[1];
+	grp=x.split('<usergroup>')[1]; lvl=x.split('<access-level>')[1];
+	auth=x.split('<authorized>')[1]; acl=x.split('<acl>')[1]; time=x.split('<timestamp>')[1];
+	data='streamer-url: '+url+'<br>token: '+token+'<br>cddomain: '+cdDom+'<br>usergroup: '+grp+'<br>accesslevel: '+lvl+
+	'<br>authorized: '+auth+'<br>acl: '+acl+'<br>timestamp: '+time; // you can change this to print a ready made streamer url
+	return data;
+}
+function writeTable(xml){
+	qArr=xml.split('<quote>');
+	table='<table align=center bgcolor="#DDDDDD" cellSpacing=1 cellPadding=3 style="margin: 0px auto">'+
+	'<tr bgcolor="#EEEEEE"><td width=50>Symbol</td><td width=40>Gap</td><td width=40>High</td>'+
+	'<td width=40>Low</td><td width=40>Range</td><td width=40>Now</td></tr>';
+	for(q=1;q<qArr.length;q++){
+		t=qArr[q].replace(/></g,'>0<').replace(/<\//g,'<');
+		sym=t.split('<symbol>')[1]; exch=t.split('<exchange>')[1];
+		cls=Number(t.split('<close>')[1]); opn=Number(t.split('<open>')[1]); hgh=Number(t.split('<high>')[1]);
+		low=Number(t.split('<low>')[1]); now=Number(t.split('<last>')[1]);
+		table+='<tr bgcolor="#FFFFFF"><td>'+sym+'</td><td>'+num(opn-cls,cls*.05)+'</td><td>'+num(hgh-cls,cls*.06)+
+		'</td><td>'+num(low-cls,cls*.06)+'</td><td>'+Math.round((hgh-low)*100)/100+'</td><td>'+num(now-cls,cls*.05)+'</td></tr>';
+		add('csv','"'+sym+'","'+now+'","'+exch+'"<br>');
+	}
+	table=table.replace(/>-/g,'>').replace(/>0/g,'>')+'</table>';
+	return table;
+}
+function num(n,mvt){
+	n=Math.round(n*100)/100;
+	if(n==0 || n>2){
+		return '&ndash;';
+	}else if(n>0){
+		if(n>mvt){ return '<b class=cG>'+(((n*10)%1==0)?n+'0':n)+'</b>'; }else{ return '<span class=cG>'+(((n*10)%1==0)?n+'0':n)+'</span>'; }
+	}else{
+		if(n<mvt*-1){ return '<b class=cR>'+(((n*10)%1==0)?n+'0':n)+'</b>'; }else{ return '<span class=cG>'+(((n*10)%1==0)?n+'0':n)+'</span>'; }
+	}
+}
+//-->
+</script>
+</body>
+
+</html>

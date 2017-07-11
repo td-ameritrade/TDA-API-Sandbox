@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+
+; The following value prevents an IOException from being thrown and caught
+; by System.Net.HybridWebProxyFinder.InitializeFallbackSettings() (in System.dll)
+; when WebRequest.Create is first called.  By default the "LegacyWPADSupport"
+; value doesn't exist, and when InitializeFallbackSettings calls GetValueKind,
+; an IOException is thrown.  This adds the value with its default of false to
+; prevent the exception.
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework]
+"LegacyWPADSupport"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\.NETFramework]
+"LegacyWPADSupport"=dword:00000000
