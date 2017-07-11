@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Check Dates/Times</title>
+</head>
+
+<body bgcolor="#eeeeee" style="text-align: center; margin: 20px" onLoad="document.frm.reset();">
+<b style="font-size: 16px; color: #008000">OHLC Data</b>
+<form name="frm" action="#" method="get">
+&nbsp;<input type="button" value="Check Dates/Times" style="vertical-align: top" onclick="ckfxData('check');">
+&nbsp;<input type="button" value="Fix Dates/Times" style="vertical-align: top" onclick="ckfxData('fix');">
+&nbsp;<input type="button" value="Swap 8:30=9:30" style="vertical-align: top" onclick="shiftHR();">
+<br><textarea id="userdata" cols="70" rows="20" style="margin: 4px auto; font-size: 11px; overflow-y: scroll"></textarea><br><br>
+<b style="font-size: 16px; color: #008000">Missing Lines / Output Data</b><br>
+<textarea id="results" cols="70" rows="20" style="margin: 4px auto; font-size: 11px; overflow-y: scroll" onfocus="this.select();"></textarea>
+</form>
+<script language="JavaScript" type="text/javascript">
+<!--
+function ckfxData(task){
+	uDat=document.getElementById('userdata').value; if(uDat=='')return false;
+	uDat=uDat.replace(new RegExp('\\r','g'),'');
+	lines=uDat.split('\n');
+	hr = new Array('09','10','11','12','13','14','15');
+	mn = new Array('00','05','10','15','20','25','30','35','40','45','50','55');
+	earlyCls = new Array('07/03/08','11/28/08','12/24/08','11/27/09','12/24/09','11/26/10');
+	var memDate='', ptH=0, ptM=6, missing='', cntMiss=0, junk='', cntJnk=0, newLns='', isCls=false, early=false;
+	for(i=0;i<lines.length;i++){
+		if(lines[i]=='')continue;
+		col=lines[i].split(',');
+		if(memDate!=col[0]){
+			memDate=col[0]; ptH=0; ptM=6; isCls=false; early=false;
+			for(ii=0;ii<earlyCls.length;ii++) if(memDate==earlyCls[ii])early=true;
+		}
+		if(isCls){
+			junk+=col[0]+','+col[1]+'\n'; cntJnk++;
+		}else{
+			plug='';
+			while(col[1]!=hr[ptH]+':'+mn[ptM]){
+				missing+=col[0]+','+hr[ptH]+':'+mn[ptM]+'\n'; cntMiss++;
+				plug+=col[0]+','+hr[ptH]+':'+mn[ptM]+'~XXX~';
+				ptM++; if(ptM==mn.length){ ptM=0; ptH++; if(ptH==hr.length || (early && hr[ptH]=='13')){isCls=true; break;} }
+			}
+			ptM++; if(ptM==mn.length){ ptM=0; ptH++; if(ptH==hr.length || (early && hr[ptH]=='13'))isCls=true; }
+			if(plug!='')plug=plug.replace(/~XXX~/g,','+col[2]+','+col[2]+','+col[2]+','+col[2]+',100\n');
+			newLns+=plug+lines[i]+'\n';
+		}
+	}
+	if(task=='check'){
+		if(missing=='')missing='None\n\n';
+		if(junk=='')junk='None';
+		document.getElementById('results').value='Missing Lines('+cntMiss+'):\n'+missing+'Extra Lines('+cntJnk+'):\n'+junk;
+	}else if(task=='fix'){
+		document.getElementById('results').value=newLns;
+	}
+}
+function shiftHR(){
+	uDat=document.getElementById('userdata').value; if(uDat=='')return false;
+	uDat=uDat.replace(new RegExp('\\r','g'),'');
+	lines=uDat.split('\n'); newLns='';
+	hr = new Array('08:','09:','10:','11:','12:','13:','14:','15:');
+	for(i=0;i<lines.length;i++){
+		if(lines[i]=='')continue;
+		for(x=0;x<hr.length-1;x++){
+			if(lines[i].match(hr[x])){ lines[i]=lines[i].replace(hr[x],hr[(x+1)]); x=100; }
+		}
+		newLns+=lines[i]+'\n';
+	}
+	document.getElementById('results').value=newLns;
+}
+//-->
+</script>
+</body>
+
+</html>

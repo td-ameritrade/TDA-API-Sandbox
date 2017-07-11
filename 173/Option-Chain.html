@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>TDAmeritrade API - Tester</title>
+<style>
+body,p,table,form,div { margin: 0px; padding: 0px; }
+body,p,table,input,select,textarea { font-family: Verdana; font-size: 12px; }
+input,textarea { vertical-align: middle; }
+input[type=text],select,textarea { text-align: left; }
+a		{ color: #333399; text-decoration: none; }
+a:hover	{ color: #FF9900; }
+.brdr	{ border: solid 1px #999999; }
+.btn 	{ padding: 2px 6px 4px 6px; cursor: pointer; font-weight: bold; color: #008000; background: #F0F0AA;
+		border: 1px solid; border-color: #669966 #336633 #336633 #669966;
+		filter:progid:DXImageTransform.Microsoft.Gradient (GradientType=0,StartColorStr="#FFffffff",EndColorStr="#99e8e888"); }
+.cG		{ color: #008000; }
+.cR		{ color: #CC0000; }
+.sz16	{ font-size: 16px; }
+</style>
+</head>
+
+<body bgcolor="#F6FAFF" style="margin: 20px 0px;text-align: center">
+	<b class="sz16" style="color: #000080">Option Chain Demo</b>
+	<br><br><br>
+	<span class="sz16">1)</span>&emsp;<b class=cG>SourceID:</b> <input id="SourceID" name="SourceID" type="text" size="10">
+	<b class=cG>Username:</b> <input id="Username" name="Username" type="text" size="20">
+	<b class=cG>Password:</b> <input id="Password" name="Password" type="text" size="20">
+	<input class="btn" type="button" value="Login" onclick="getXML('login');">
+	<br><br>
+<div>
+</div>
+	<span class="sz16">2)</span>&emsp;<b class=cG>Symbol:</b> <input id="symb" name="symb" type="text" size="10">
+	<input name="opttype" type="radio" value="C" onclick="typVal='C';" checked> Calls
+	<input name="opttype" type="radio" value="P" onclick="typVal='P';"> Puts
+	&ensp;/&ensp;<input name="range" type="radio" value="N" onclick="rngVal='N';" checked> Near
+	<input name="range" type="radio" value="I" onclick="rngVal='I';"> In
+	<input name="range" type="radio" value="O" onclick="rngVal='O';"> Out
+	<!-- Getting "All" Options with Quotes will lock-up IE -->
+	&ensp;<input class="btn" type="button" value="Option Chain" onclick="clr('results');getXML('options');">
+	<br><br>
+	<span class="sz16">3)</span>&emsp;<input class="btn" type="button" value="Logout" onclick="getXML('logout');">
+	<br><br>
+<hr width="70%">
+	4)&ensp;<b class=cG>Toggle:</b>&emsp;<a href="#" onclick="off('tracking');on('results');return false;">Results</a>
+	&bull; <a href="#" onclick="off('results');on('tracking');return false;">Raw Data</a>
+<hr width="70%">
+<div id="results"><b class=cG>— Results Area Ready —</b></div>
+<textarea id="tracking" class="brdr" rows="40" style="display: none; width: 700px; margin: 0px auto; overflow: auto">Raw XML will print here...</textarea>
+<script language="JavaScript" type="text/javascript">
+<!--
+function on(id){ document.getElementById(id).style.display='block'; }
+function off(id){ document.getElementById(id).style.display='none'; }
+function clr(id){ document.getElementById(id).innerHTML=''; }
+function inn(id,html){ document.getElementById(id).innerHTML=html; }
+function addV(id,html){ document.getElementById(id).value=document.getElementById(id).value+html; }
+function valIs(id){ return document.getElementById(id).value; }
+function strLeft(str, what){ return str.match(what) ? str.slice(0, str.indexOf(what)) : str; }
+function strRight(str, what){ return str.match(what) ? str.slice(str.indexOf(what)+what.length) : str; }
+
+var rngVal='N', typVal='C';
+function getXML(task){
+	Source=valIs('SourceID'); User=valIs('Username'); Pass=valIs('Password');
+	if(Source=='' || User=='' || Pass==''){ alert('Need User Info'); return; }
+	var data='',html='', url='https://apis.tdameritrade.com/apps/'; Source='source='+Source;
+
+	Ajax=new XMLHttpRequest();
+	try{
+		if(task=='login'){
+			data=Source+'&version=1.0';
+			url+='100/LogIn?'+data;
+			data+='&userid='+User+'&password='+Pass;
+			addV('tracking','\n\nURL: '+url+'\nData: '+data);
+			Ajax.open('POST', url, true);
+			Ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+			Ajax.send(data);
+		}else{
+			if(task=='options'){
+				inn('results','One moment please...');
+				url+='100/OptionChain?'+Source+'&symbol='+valIs('symb')+'&type='+typVal+'&range='+rngVal+'&quotes=true';
+			}else if(task=='logout'){ url+='100/LogOut?'+Source;
+			}else{ return; }
+			addV('tracking','\n\nURL: '+url);
+			Ajax.open('GET', url, true);
+			Ajax.setRequestHeader('Content-type', 'text/html; charset=Windows-1256');
+			Ajax.setRequestHeader('If-Modified-Since', 'Fri, 31 Dec 1999 00:00:00 GMT');
+			Ajax.send(null);
+		}
+	}catch(err){
+		if(err.description.match(/access/i) && err.description.match(/denied/i)){
+			alert('AJAX Access Needed\n\nInternet Options >> Security (tab) >>\nCustom level >>\nAccess data sources across domains');
+		}else{ alert('Error: '+err.name+'\n'+err.message); }
+	}
+	Ajax.onreadystatechange = function(){
+		if(Ajax.readyState==4){
+			if(Ajax.status==200){
+				var XML=Ajax.responseText;
+
+				// data = Raw XML
+				data=XML.replace(/><\//g,'~X~'); data=data.replace(/></g,'>\n<'); data=data.replace(/~X~/g,'></');
+				var sep='';
+				if(task=='options') sep='option-date';
+				if(sep!='') data=data.replace(new RegExp('<'+sep+'>','g'),'\n----- <'+sep+'> -----');
+				addV('tracking','\n\n'+data); data='';
+
+				// html = Parsed XML
+				if(task=='options'){
+					if(XML.match('enter a valid symbol')){ html='Please enter a valid symbol.';
+					}else{ html=ParseOptionChain(XML); }
+				}else if(!XML.match('<result>OK</result>')){
+					html=XML.replace(/</g,'&lt;');
+				}else if(task=='login'){
+	//				acctID=strRight(XML,'<account-id>'); acctID=strLeft(acctID,'</account-id>');
+					html='Logged-In';
+				}else if(task=='logout'){
+					if(XML.match('LoggedOut')){ html='Logged-Out'; }else{ html=XML.replace(/</g,'&lt;'); }
+				}else{
+					html='Refer to Raw Data';
+				}
+				inn('results',html); html='';
+			}else{
+				alert('Error: status = '+Ajax.status);
+				return;
+			}
+		}
+	};
+}
+function ParseOptionChain(xml){
+	var cols='Strike,Symbol,Bid/Ask,Last,ImpV'; var colArr=cols.split(','); numCol=colArr.length;
+	var table='<table align=center bgcolor="#AAAAAA" cellSpacing=1 cellPadding=3 style="margin: 0px auto">';
+	table+='<tr bgcolor="#CCCCCC">'; for(var i=0; i<numCol; i++)table+='<td>'+colArr[i]+'</td>'; table+='</tr>\n';
+
+	var optArr=xml.split('<option-date>');
+	for(var i=1; i<optArr.length; i++){// skip header xml i=0
+		var date=strRight(optArr[i],'<date>'); date=strLeft(date,'</date>');
+		var days=strRight(optArr[i],'<days-to-expiration>'); days=strLeft(days,'</days-to-expiration>');
+		table+='<tr bgcolor="#F0F0AA"><td colspan='+numCol+'>'+date+' in '+days+' days</td></tr>\n';
+		var strkArr=optArr[i].split('<option-strike>');
+		for(var ii=1; ii<strkArr.length; ii++){// skip date xml ii=0
+			var strike=strRight(strkArr[ii],'<strike-price>'); strike=strLeft(strike,'</strike-price>');
+			if(strkArr[ii].match('<put>')){
+				var putXML=strRight(strkArr[ii],'<put>'); putXML=strLeft(putXML,'</put>');
+				table += GetOptionRow(putXML, strike);
+			}
+			if(strkArr[ii].match('<call>')){
+				var callXML=strRight(strkArr[ii],'<call>'); callXML=strLeft(callXML,'</call>');
+				table += GetOptionRow(callXML, strike);
+			}
+		}
+	}
+	return table;
+}
+function GetOptionRow(xml, strike){
+	var TD='</td><td>';
+	var optsymb=strRight(xml,'<option-symbol>'); optsymb=strLeft(optsymb,'</option-symbol>');
+	var bidask=strRight(xml,'<bid-ask-size>'); bidask=strLeft(bidask,'</bid-ask-size>');
+	var last; if(xml.match('<last></last>')){ last='--'; }else{ last=strRight(xml,'<last>'); last=strLeft(last,'</last>'); }
+	var impV=strRight(xml,'<implied-volatility>'); impV=strLeft(impV,'</implied-volatility>');
+	return '<tr bgcolor="#FFFFFF"><td>'+ strike +TD+ optsymb +TD+ bidask +TD+ last +TD+ impV +'</td></tr>\n';
+}
+//testXML='cut-n-paste Raw XML into here';
+//inn('results',ParseOptionChain(testXML));
+//-->
+</script>
+<p style="height: 50px">&nbsp;</p>
+</body>
+
+</html>
